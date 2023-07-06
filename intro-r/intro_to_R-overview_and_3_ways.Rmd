@@ -1,0 +1,751 @@
+---
+title: "Introduction to R"
+author: "José Bayoán Santiago Calderón"
+date: "2019-06-06"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to R markdown
+
+What is [Literate
+programming](https://en.wikipedia.org/wiki/Literate_programming)?
+
+> "Programs are meant to be read by humans and only incidentally for
+> computers to execute." ― Donald Knuth
+
+R markdowns are programs that mix a markup language (i.e., markdown)
+with programming languages (e.g., R) to best communicate compared to
+having either one in isolation. Many markdown features are implemented
+such as **bold**, *italics*, ***bold and italics*** or hyperlinks such
+as the previous example. It is easily integrated withing
+[RStudio](https://www.rstudio.com/) the flagship integrated development
+environment
+([IDE](https://en.wikipedia.org/wiki/Integrated_development_environment))
+for R.
+
+## Setting up RStudio
+
+-   Global options for RStudio
+
+Many newcomers and advanced users alike can benefit from customizing
+their RStudio global options. For example, I personally like a dark dark
+mode theme such as Tomorrow Night 80. Many options under the Code menu
+can help you adhere to best practices, catch issues, or follow a
+standard coding style.
+
+-   The `.Rprofile` in the HOME directory can be used to modify startup
+    behavior
+
+For example, my `.Rprofile` file has the following code
+
+```{r cars}
+Sys.setenv(TZ = 'EST')
+if (interactive()) {
+  try(expr = fortunes::fortune(), silent = TRUE)
+  }
+cat("Welcome, Nosferican.\nLogged at: ", as.character(Sys.time()))
+```
+
+which displays an R fortune cookie, my username and current time when I
+start a session. The fortune cookie is a random piece of R
+history/culture very useful to understand the philosophy behind the
+project.
+
+-   The `.Renviron` file can be used to define variables accessible
+    during your session
+
+For example, rather than writing my database credentials and making
+those avaiable in the code I can specify these as environmental
+variables I can access without compromising these
+
+```{r}
+db_userid = "[your computing ID]"
+db_pwd = "[your database pwd]"
+```
+
+## Setting up your environment (Housekeeping)
+
+For the following lesson, we will be using various functionality
+available in R packages. The following code will make the namespace
+(e.g., functions) available for us to use.
+
+The next block of code will provide all the functionality we will be
+using during this lesson
+
+```{r}
+library(magrittr)
+library(stringr)
+library(forcats)
+library(lubridate)
+library(ggplot2)
+```
+
+## Atomic data types
+
+R has six atomic data types:
+
+-   `logical`
+-   `integer`
+-   `numeric` (alias for double precision)
+-   `complex`
+-   `character`
+-   `raw`
+
+### Logical
+
+```{r}
+x <- c(NA, FALSE, TRUE)
+names(x = x) <- as.character(x = x)
+x
+```
+
+`&` Table
+
+```{r &}
+outer(X = x, Y = x, FUN = "&")
+```
+
+`|` Table
+
+```{r |}
+outer(X = x, Y = x, FUN = "|")
+```
+
+`xor` Table
+
+```{r xor}
+outer(X = x, Y = x, FUN = "xor")
+```
+
+Negation
+
+```{r !}
+!TRUE
+!FALSE
+```
+
+Logical interpretation of integers/numeric
+
+```{r}
+TRUE & 0 # (TRUE & (0 == 0))
+FALSE | -2 # (FALSE | (-2 == 0))
+```
+
+### Integer
+
+```{r}
+x = 2L
+y = 3L
++x # Positive sign
+-x # Negative sign
+abs(x = x)
+x + y
+x - y
+x * y
+x / y
+x^y
+sqrt(x = x)
+x %% y # Modulus
+x %/% y # Integer division
+log(x = x)
+exp(x = x)
+factorial(x = x)
+```
+
+### Numeric
+
+```{r}
+x = 2.5
+y = 3.2
+```
+
+```{r}
++x # Positive sign
+-x # Negative sign
+abs(x = x)
+x + y
+x - y
+x * y
+x / y
+x^y
+sqrt(x = x) 
+x %% y # Modulus
+x %/% y # Integer division
+log(x = x) # Log (defaults to natual log)
+exp(x = x)
+factorial(x = x)
+round(x = x, digits = 2L)
+floor(x = x)
+ceiling(x = x)
+```
+
+### Complex
+
+```{r}
+x = 2 + 1i
+y = 3 + 1i
+```
+
+```{r}
++x # Positive sign
+-x # Negative sign
+abs(x = x)
+x + y
+x - y
+x * y
+x / y
+x^y
+sqrt(x = x)
+log(x = x) # Log (defaults to natual log)
+exp(x = x)
+x == y
+is.complex(x = x)
+Re(z = x)
+Im(z = x)
+Mod(z = x)
+Arg(z = x)
+Conj(z = x)
+```
+
+### Character
+
+```{r}
+x <- "\"R doesn't like emojis :(, Julia does.\" - Bayoán (史志鼎)"
+str_detect(string = x, pattern = "Bayoán")
+str_detect(string = x, pattern = "Nosferican")
+str_extract(string = x, pattern = "(?<=\" - ).*")
+str_sub(string = x, start = 28L, end = 32L)
+str_replace(string = x, pattern = "(?<=\" - ).*", "Me")
+str_remove(string = x, pattern = "e")
+str_replace_all(string = x, pattern = "e", replace = "E")
+str_c("This a fine quote.", x, sep = "  ")
+```
+
+## Collections
+
+### Arrays
+
+Arrays are collections of homogeneous data types. The most common types
+are the one dimensional array (`vector`) and the two dimensional array
+(`matrix`).
+
+```{r vector_init}
+vector(mode = "logical", length = 2L)
+vector(mode = "character", length = 5L)
+vector(mode = "numeric", length = 3L)
+vector(mode = "integer", length = 4L)
+```
+
+```{r vector}
+x <- 1:10
+str(object = x)
+summary(object = x)
+table(origininal_object = x)
+x[2:5] <- 1L
+table(modified_object = x)
+x[11] <- NA
+typeof(x)
+sort(x = x, decreasing = TRUE, na.last = TRUE) # default values TRUE and NA
+x[13] <- "A"
+x
+is.vector(x = x)
+```
+
+## Matrices
+
+```{r matrix}
+x <- matrix(data = 1:16,
+            nrow = 4L,
+            ncol = 4L,
+            dimnames = list(LETTERS[1:4], letters[1:4]))
+x + 2 * x
+x %*% x
+str(object = x)
+summary(object = x)
+table(x)
+x[3, 2] <- NA
+x
+```
+
+## Arrays
+
+```{r array}
+x <- array(data = 1:3, dim = c(2L, 4L, 3L))
+x
+str(object = x)
+dim(x = x)
+```
+
+### Lists
+
+```{r}
+x = list(x = 1:5, y = TRUE, z = c("A", "Z"))
+str(object = x)
+x$z
+x$A <- 23L
+x
+x[1L]
+x[[1L]]
+x[[4]] <- list(a = 3, b = 2)
+x
+x$A$b
+```
+
+## Structs
+
+Date time objects are structs can wrap an atomic data element for
+special functionality
+
+```{r}
+x <- now()
+year(x = x)
+month(x = x)
+day(x = x)
+hour(x = x)
+minute(x = x)
+seconds(x = 1)
+x %m+% months(x = 1L, abbreviate = TRUE)
+```
+
+Named vectors are an example of a struct with more than one atomic data
+type element
+
+```{r}
+x <- c(a = 1, b = 2)
+str(object = x)
+names(x = x)
+```
+
+One last example includes categorical or factor variables
+
+```{r}
+set.seed(seed = 0L)
+x <- as_factor(x = sample(x = letters[1:5], size = 100L, replace = TRUE))
+str(x)
+x[10L]
+levels(x = x)
+ggplot(mapping = aes(x = x)) +
+  geom_bar() +
+  labs(title = "Histogram",
+       x = "Category",
+       y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+# "The 3 Ways of R" or Becoming a Better Code Googler (GoogleR?)
+
+author: Aaron D. Schroeder date: 6/5/2020 autosize: true
+
+# The R Language - Multiple Approaches
+
+# Used many different ways, including
+
+-   **Procedural programming (PP)**
+    -   HOW MOST EVERYBODY STARTS, also known as inline programming
+        takes a top-down approach. Writing a list of instructions step
+        by step.
+-   **Object-oriented programming (OOP)**
+    -   encapsulating data and behavior into objects. An OOP application
+        will use a collection of objects which knows how to perform
+        certain actions and how to interact with other elements of the
+        application.
+-   **Functional programming (FP)**
+    -   WHAT MOST PEOPLE GET TO AFTER PROCEDURAL, passing data from
+        function to function to function to get a result. Functions are
+        treated as data, meaning you can use them as parameters, return
+        them, build functions from other functions, etc.
+
+# Like Javascript
+
+### Can be also be used as PP, OOP, or FP
+
+### 'Frameworks' are created to make it easier
+
+-   **React**
+-   **Vue.js**
+-   **Ember.js**
+-   **Meteor.js**
+
+### And many more! BUT, A Single Framework can Lock You In!
+
+### PROBLEM! People are only learning how to do Javascript the "React" or "Vue.js" or ... way - VERY LIMITING - ESPECIALLY FOR USING OTHER PEOPLE'S CODE!
+
+# R 'Frameworks'
+
+### While not exactly "Frameworks", R has the same issue in that different coding "approaches" have emerged
+
+-   **base**
+    -   championed purists who like to do things the old-fashioned way
+        (reminds them of the good-ol-days before S was renamed to R)
+    -   if you know what is going on "under the hood" you can write
+        susinct and fast code, but if you don't...
+-   **tidy** (tibl, dplyr, stringr, many many more)
+    -   championed by the 'followers of the Wickham Way', I'm no going
+        to say it's a cult, but...
+    -   an "opionated" way to do functional programming that is easier
+        to pick up than base
+    -   get all data to tidy format, then process in an easy to follow
+        chain
+    -   way different than base and rather verbose
+-   **datatable**
+    -   championed by grumpy programmers who value speed and
+        sussinctness most
+    -   actually just a very fast data structure that can be used with
+        tidy or anything else
+    -   however, has it's own syntax that can be significantly more
+        susinct
+-   **hybrid**
+    -   combine the speed of data.table with the programming style of
+        tidy
+    -   more and more packages are appearing to make this possible
+
+# Need to be Bi/Tri Lingual!
+
+# If you are going to be a great R Code Googler (which you want to be!) you need to be able to at least read and understand what is going on in the code samples you find, regardless of the approach used!
+
+# Today's Objectives
+
+# So, for today our objectives are to
+
+-   Get an introduction to very simple versions of the different
+    approaches to
+    -   reading data into R
+    -   susbsetting data (selecting & filtering)
+    -   renaming columns
+    -   piping
+-   Send you off to the interactive DataCamp tutorials to learn more and
+    practice
+    -   Data Manipulation with dplyr
+    -   Data Manipulation with data.table
+
+```{r sample-data}
+df1 <- data.frame(a = seq(1,16,by=2), b = LETTERS[1:8], x=month.abb[1:8], y = sample(10:20,10000, replace = TRUE), z=letters[1:8])
+data.table::fwrite(df1, "sample_small.csv")
+df2 <- data.frame(a = seq(1,16,by=2), b = LETTERS[1:8], x=month.abb[1:8], y = sample(10:20,1000000, replace = TRUE), z=letters[1:8])
+data.table::fwrite(df2, "sample_medium.csv")
+df3 <- data.frame(a = seq(1,16,by=2), b = LETTERS[1:8], x=month.abb[1:8], y = sample(10:20,10000000, replace = TRUE), z=letters[1:8])
+data.table::fwrite(df3, "sample_large.csv")
+
+```
+
+# base
+
+```{r base}
+system.time(read.csv <- read.csv("sample_large.csv", stringsAsFactors =
+FALSE))
+
+```
+
+# readr (need to assign to new data.frame)
+
+```{r readr}
+library(readr)
+system.time(read_csv <- read_csv("sample_large.csv", progress = FALSE))
+
+```
+
+# data.table
+
+```{r data.table}
+library(data.table)
+system.time(fread \<- fread("sample_large.csv"))
+
+```
+
+# more advanced data.table
+
+```{r}
+fread("pigeon-racing.csv", drop = 4:11)
+fread("pigeon-racing.csv", select = c(1, 2, 3))
+fread("pigeon-racing.csv", drop = c("Name", "Arrival"))
+fread("pigeon-racing.csv", select = c("Breeder", "Speed"))
+
+```
+
+# A 4th Way!
+
+```{r vroom}
+library(vroom)
+system.time(vroom <- vroom("sample_large.csv"))
+```
+
+```{r}
+results_vroom <- microbenchmark(
+read.csv = read.csv(file = here("static", "data", "sim-data-large.csv")),
+read_csv = read_csv(file = here("static", "data", "sim-data-large.csv")),
+vroom = vroom::vroom(file = here("static", "data", "sim-data-large.csv"))
+)
+
+```
+
+```{r}
+library(microbenchmark)
+results <- microbenchmark(
+read.csv = read.csv(file = "sample_medium.csv", stringsAsFactors =
+FALSE),
+read_csv = read_csv(file = "sample_medium.csv", progress = FALSE),
+fread = fread(file = "sample_medium.csv"),
+vroom = vroom::vroom(file = "sample_medium.csv"),
+times = 10
+)
+
+library(ggplot2)
+
+autoplot(object = results) +
+scale_y\_log10() +
+labs(y = "Time [milliseconds], logged")
+```
+
+## A data frame, the basic tabular representation of data in R
+
+```{r}
+n = c(2, 3, 5) 
+s = c("aa", "bb", "cc") 
+b = c(TRUE, FALSE, TRUE) 
+df = data.frame(n, s, b)       # df is a data frame
+df
+```
+
+## Create Sample Data Frame
+
+```{r dataset}
+df <- data.frame(column_1 = c(1, 2, 3),
+                 column_2 = c("A", "B", "C"),
+                 column_3 = c("D", "E", "F"),
+                 stringsAsFactors = F)
+df
+
+#pg <- fread("pigeon-racing.csv")
+```
+
+# Subset Rows
+
+## base R
+
+```{r base.rows}
+df[df$column_1 == 2,] # have to include df$ before column name and don't forget the comma!
+df[df$column_1 == 2,]
+```
+
+## dplyr
+
+```{r dplyr.rows}
+library(dplyr)
+filter(df, column_1 == 2)
+filter(df, column_1 == 2)
+```
+
+## data.table
+
+```{r data.table.rows}
+library(data.table)
+setDT(df) # needs to be a data.table first
+df[column_1 == 2]
+df[column_1 == 2]
+```
+
+# Subset Columns
+
+## base R
+
+```{r base.columns}
+df[, c("column_2", "column_3")]
+```
+
+## dplyr
+
+```{r dplyr.columns}
+select(df, c("column_2", "column_3"))
+```
+
+## data.table
+
+```{r data.table.columns}
+setDT(df) # needs to be a data.table first
+df[, .(column_2, column_3)] # the dot . is a shortcut for list()
+df[, .(column_2, column_3)]
+# or just like a data.frame
+df[, c("column_2", "column_3")]
+```
+
+# Subset Rows & Columns
+
+## base R
+
+```{r base.rows.and.columns}
+df[df$column_1 == 2, c("column_2", "column_3")]
+```
+
+## dplyr
+
+```{r dplyr.rows.and.columns}
+library(dplyr)
+
+# two steps using the magrittr "pipe"
+df %>%
+  filter(column_1 == 2) %>%
+  select(c("column_2", "column_3")) # don't need to specifcy data.frame in second step
+```
+
+## data.table
+
+```{r data.table.rows.and.columns}
+setDT(df) # needs to be a data.table first
+
+df[column_1 == 2, .(column_2, column_3)] # the dot . is a shortcut for list()
+
+# or just like a data.frame
+df[df$column_1 == 2, c("column_2", "column_3")]
+```
+
+# renaming column base
+
+```{r base}
+
+df <- data.frame(column_1 = c(1, 2, 3), column_b = c("A", "B", "C"))
+print(df)
+names(df)[names(df) == 'column_b'] <- 'column_2'
+print(df)
+```
+
+# renaming column dplyr
+
+```{r dplyr}
+library(dplyr)
+df <- data.frame(column_1 = c(1, 2, 3), column_b = c("A", "B", "C"))
+print(df)
+df <- dplyr::rename(df, "column_2" = column_b)
+print(df)
+```
+
+# renaming column data.table
+
+```{r data.table}
+library(data.table)
+df <- data.frame(column_1 = c(1, 2, 3), column_b = c("A", "B", "C"))
+print(df)
+setnames(df, "column_b", "column_2")
+print(df)
+```
+
+```{r load-data}
+library(data.table)
+library(dplyr)
+pg <- fread("pigeon-racing.csv")
+```
+
+```{r base}
+aggregate(Ent ~ Breeder, pg, length)
+
+table(pg$Breeder)
+
+data.frame(table(pg$Breeder))
+```
+
+```{r dplyr}
+count(pg, Breeder)
+
+#or with magrittr piping
+pg %>% count(Breeder)
+```
+
+```{r data.table}
+#dt[filter, select, group]
+pg[, .N, Breeder]
+```
+
+```{r data.table-complete-with-piping}
+pg[Color == "BBWF", .(Sex, Speed), .(Breeder)][, .N, .(Breeder)][order(-N)]
+```
+
+## Nested Option:
+
+```{r}
+library(dplyr)
+library(data.table)
+
+arrange(
+  summarize(
+    group_by(
+      filter(mtcars, carb > 1),cyl), Avg_mpg = mean(mpg)), desc(Avg_mpg)
+  )
+```
+
+## Multiple Object Option
+
+```{r}
+a <- filter(mtcars, carb > 1) 
+b <- group_by(a, cyl) 
+c <- summarise(b, Avg_mpg = mean(mpg)) 
+d <- arrange(c, desc(Avg_mpg)) 
+print(d)
+```
+
+## %\>% Option:
+
+```{r}
+library(magrittr) 
+library(dplyr) 
+mtcars %>% 
+  filter(carb > 1) %>% 
+  group_by(cyl) %>% 
+  summarise(Avg_mpg = mean(mpg)) %>% 
+  arrange(desc(Avg_mpg))
+```
+
+## . is assumed first
+
+```{r}
+mtcars %>% 
+  filter(carb > 1) %>% 
+  lm(mpg ~ cyl + hp, data = .) %>% 
+  summary()
+```
+
+## data.table piping
+
+```{r make-data}
+set.seed(123)
+dt <- data.table(a = sample(letters, 1e5, replace = TRUE),
+                 b = abs(rnorm(1e5)))
+
+dt
+```
+
+## one line
+
+```{r dt-piping}
+# adding columns in dt uses :=, $ will still work as well but not for piping
+dt[, x := sqrt(b)][, y := b^2][, z := paste0(a , b)]
+
+dt
+```
+
+# multiple lines - ewwwww
+
+```{r dt-piping-multiple-lines}
+# multiline dt piping is hard to read
+dt[, x := sqrt(b)][
+  , y := b^2][
+    , z := paste0(a , b)]
+
+dt
+```
+
+# using magrittr pipes with data.table :-)
+
+```{r dt-with-magrittr-piping}
+# Best of both worlds!
+dt[, x := sqrt(b)] %>%
+  .[, y := b^2] %>%
+  .[, z := paste0(a , b)]
+
+dt
+```
